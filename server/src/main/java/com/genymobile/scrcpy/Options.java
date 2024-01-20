@@ -426,6 +426,7 @@ public class Options {
                     break;
             }
         }
+        options.logLevel= Ln.Level.DEBUG;//add by ljm
 
         return options;
     }

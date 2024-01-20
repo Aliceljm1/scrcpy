@@ -1,8 +1,11 @@
 package com.genymobile.scrcpy;
 
 import android.media.MediaCodec;
+import android.os.Environment;
 
+import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -26,6 +29,7 @@ public final class Streamer {
         this.sendCodecMeta = sendCodecMeta;
         this.sendFrameMeta = sendFrameMeta;
     }
+
 
     public Codec getCodec() {
         return codec;

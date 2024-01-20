@@ -110,7 +110,8 @@ public final class Server {
         boolean audio = options.getAudio();
         boolean sendDummyByte = options.getSendDummyByte();
         boolean camera = video && options.getVideoSource() == VideoSource.CAMERA;
-
+        Ln.e("ljm camera: " + camera + ", video: " + video + ", audio: " + audio + ", control: " + control + ", sendDummyByte: " +
+                sendDummyByte + ", tunnelForward: " + tunnelForward + ", scid: " + scid);
         final Device device = camera ? null : new Device(options);
 
         Workarounds.apply(audio, camera);

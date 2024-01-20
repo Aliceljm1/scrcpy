@@ -11,7 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi", "BlockedPrivateApi"})
-@TargetApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public final class DisplayControl {
 
     private static final Class<?> CLASS;

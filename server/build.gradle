@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     namespace 'com.genymobile.scrcpy'
-    compileSdk 34
+    compileSdk 33
     defaultConfig {
         applicationId "com.genymobile.scrcpy"
         minSdkVersion 21
@@ -26,5 +26,45 @@ android {
 dependencies {
     testImplementation 'junit:junit:4.13.2'
 }
+//dependencies {
+//    classpath 'com.android.tools.build:gradle:7.4.0'
+//}
 
+task createJar(type: Jar) {
+    println '执行了 createJar'
+    from android.sourceSets.main.java.srcDirs
+    include '**/*.class'
+    archiveClassifier = 'classes'
+    destinationDirectory = file("$buildDir/outputs/jar")
+}
+
+// 复制 JAR 文件到指定目录的任务
+task copyJar(type: Copy) {
+    dependsOn createJar
+
+    from "$buildDir/intermediates/runtime_app_classes_jar/debug"
+    into "D:/Project/AndroidPoject/scrcpy-win64-v2.3.1/"
+    rename { String fileName ->
+        fileName.replace("classes.jar", "scrcpy-server")
+    }
+
+    doLast {
+        println "复制文件从: $buildDir/intermediates/runtime_app_classes_jar/debug 到: D:/Project/AndroidPoject/scrcpy-win64-v2.3.1/"
+    }
+}
+
+// 将 copyJar 任务添加为构建 APK 的一部分
+// 将 copyJar 任务添加为所有构建变体的一部分
+android.applicationVariants.all { variant ->
+    variant.assembleProvider.configure {
+        dependsOn copyJar
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '8.1.1'
+}
+task prepareKotlinBuildScriptModel {
+
+}
 apply from: "$project.rootDir/config/android-checkstyle.gradle"

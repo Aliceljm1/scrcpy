@@ -3,10 +3,13 @@ package com.genymobile.scrcpy;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
+import android.os.Environment;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.view.Surface;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -35,7 +38,7 @@ public class SurfaceEncoder implements AsyncProcessor {
 
     private Thread thread;
     private final AtomicBoolean stopped = new AtomicBoolean();
-
+    private         FileOutputStream outputStream;
     public SurfaceEncoder(SurfaceCapture capture, Streamer streamer, int videoBitRate, int maxFps, List<CodecOption> codecOptions, String encoderName,
             boolean downsizeOnError) {
         this.capture = capture;
@@ -45,6 +48,24 @@ public class SurfaceEncoder implements AsyncProcessor {
         this.codecOptions = codecOptions;
         this.encoderName = encoderName;
         this.downsizeOnError = downsizeOnError;
+
+        try {
+            // 检查外部存储是否可用
+            if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                Ln.e("H264 File path: Environment error" );
+            }
+
+            // 获取 DOWNLOAD 目录
+            File downloadFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+
+            File outputFile = new File(downloadFolder, "out.h264");
+            Ln.e("H264 File path: " + outputFile.getAbsolutePath());
+
+            outputStream = new FileOutputStream(outputFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
     }
 
     private void streamScreen() throws IOException, ConfigurationException {
@@ -144,6 +165,28 @@ public class SurfaceEncoder implements AsyncProcessor {
         return 0;
     }
 
+    /**
+     * add by ljm 写文件
+     * */
+    public void wirteVideoFile(ByteBuffer buffer)
+    {
+//        try {
+//            byte[] bytes;
+//            if (buffer.hasArray()) {
+//                // 使用后端数组
+//                bytes = buffer.array();
+//            } else {
+//                // 创建一个新的字节数组并复制缓冲区内容
+//                bytes = new byte[buffer.remaining()];
+//                buffer.get(bytes);
+//            }
+//            outputStream.write(bytes);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+
     private boolean encode(MediaCodec codec, Streamer streamer) throws IOException {
         boolean eof = false;
         boolean alive = true;
@@ -171,7 +214,7 @@ public class SurfaceEncoder implements AsyncProcessor {
                         firstFrameSent = true;
                         consecutiveErrors = 0;
                     }
-
+                    wirteVideoFile(codecBuffer);
                     streamer.writePacket(codecBuffer, bufferInfo);
                 }
             } finally {
@@ -184,6 +227,12 @@ public class SurfaceEncoder implements AsyncProcessor {
         if (capture.isClosed()) {
             // The capture might have been closed internally (for example if the camera is disconnected)
             alive = false;
+        }
+
+        try {//add by ljm
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         return !eof && alive;
@@ -205,7 +254,7 @@ public class SurfaceEncoder implements AsyncProcessor {
 
         try {
             MediaCodec mediaCodec = MediaCodec.createEncoderByType(codec.getMimeType());
-            Ln.d("Using video encoder: '" + mediaCodec.getName() + "'");
+            Ln.d("Using video encoder ljm: '" + mediaCodec.getName() + "'");
             return mediaCodec;
         } catch (IOException | IllegalArgumentException e) {
             Ln.e("Could not create default video encoder for " + codec.getName() + "\n" + LogUtils.buildVideoEncoderListMessage());
